@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+  app:
+    build: .
+    volumes:
+      - .:/home/app/app
+      - static_files:/home/app/app/static_files
+    ports:
+      - "9000:9000"
+    expose:
+      - 9000
+    depends_on:
+      - database
+
+  database:
+    image: postgres:alpine3.18
+    volumes:
+      - database:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - ${DATABASE_PORT}:5432
+    command: -p ${DATABASE_PORT}
+
+  nginx_proxy:
+    image: nginx:alpine-slim
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_files:/home/app/app/static
+      - media_files:/home/app/app/media
+    ports:
+      - "8080:80"
+    command: nginx -g 'daemon off;'
+
+volumes:
+  database:
+  static_files:
+  media_files:
